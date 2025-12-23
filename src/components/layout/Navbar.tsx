@@ -126,10 +126,10 @@ const Navbar = () => {
             ) : (
               <>
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Log In</Link>
+                  <Link to="/auth">Log In</Link>
                 </Button>
                 <Button variant="default" asChild>
-                  <Link to="/signup?mode=signup">Get Started</Link>
+                  <Link to="/auth?mode=signup">Get Started</Link>
                 </Button>
               </>
             )}
@@ -194,10 +194,10 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Button variant="outline" asChild className="w-full" onClick={() => setIsOpen(false)}>
-                      <Link to="/login">Log In</Link>
+                      <Link to="/auth">Log In</Link>
                     </Button>
                     <Button variant="default" asChild className="w-full" onClick={() => setIsOpen(false)}>
-                      <Link to="/signup?mode=signup">Get Started</Link>
+                      <Link to="/auth?mode=signup">Get Started</Link>
                     </Button>
                   </>
                 )}

@@ -25,7 +25,7 @@ const CTASection = () => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button variant="hero-outline" size="xl" asChild>
-              <Link to="/signup?role=seeker">
+              <Link to="/auth?mode=signup&role=seeker">
                 Join as Seeker
                 <ArrowRight className="w-5 h-5" />
               </Link>
@@ -35,7 +35,7 @@ const CTASection = () => {
               className="bg-white text-primary hover:bg-white/90 shadow-lg"
               asChild
             >
-              <Link to="/signup?role=saathi">
+              <Link to="/auth?mode=signup&role=saathi">
                 Become a Saathi
               </Link>
             </Button>
