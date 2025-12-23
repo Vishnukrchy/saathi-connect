@@ -75,10 +75,10 @@ const HeroSection = () => {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
             <Button variant="default" size="lg" asChild>
-              <Link to="/signup?role=seeker">Join as Seeker</Link>
+              <Link to="/auth?mode=signup&role=seeker">Join as Seeker</Link>
             </Button>
             <Button variant="teal" size="lg" asChild>
-              <Link to="/signup?role=saathi">Become a Saathi</Link>
+              <Link to="/auth?mode=signup&role=saathi">Become a Saathi</Link>
             </Button>
           </div>
 
