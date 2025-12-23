@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_slots: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          saathi_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          saathi_id: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          saathi_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_slots_saathi_id_fkey"
+            columns: ["saathi_id"]
+            isOneToOne: false
+            referencedRelation: "saathi_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          duration_hours: number
+          end_time: string
+          id: string
+          meeting_location: string | null
+          notes: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          saathi_id: string
+          seeker_id: string
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          stripe_payment_intent_id: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          duration_hours?: number
+          end_time: string
+          id?: string
+          meeting_location?: string | null
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          saathi_id: string
+          seeker_id: string
+          start_time: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          stripe_payment_intent_id?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          duration_hours?: number
+          end_time?: string
+          id?: string
+          meeting_location?: string | null
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          saathi_id?: string
+          seeker_id?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          stripe_payment_intent_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_saathi_id_fkey"
+            columns: ["saathi_id"]
+            isOneToOne: false
+            referencedRelation: "saathi_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -45,6 +142,48 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saathi_details: {
+        Row: {
+          bio: string | null
+          created_at: string
+          govt_id_url: string | null
+          hourly_rate: number
+          id: string
+          is_available: boolean | null
+          is_verified: boolean | null
+          languages: string[] | null
+          topics: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          govt_id_url?: string | null
+          hourly_rate?: number
+          id?: string
+          is_available?: boolean | null
+          is_verified?: boolean | null
+          languages?: string[] | null
+          topics?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          govt_id_url?: string | null
+          hourly_rate?: number
+          id?: string
+          is_available?: boolean | null
+          is_verified?: boolean | null
+          languages?: string[] | null
+          topics?: string[] | null
           updated_at?: string
           user_id?: string
         }
@@ -90,6 +229,13 @@ export type Database = {
     }
     Enums: {
       app_role: "seeker" | "saathi" | "admin"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "completed"
+        | "cancelled"
+        | "refunded"
+      payment_status: "pending" | "paid" | "failed" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -218,6 +364,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["seeker", "saathi", "admin"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "refunded",
+      ],
+      payment_status: ["pending", "paid", "failed", "refunded"],
     },
   },
 } as const
