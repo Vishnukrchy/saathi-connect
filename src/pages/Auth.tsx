@@ -40,7 +40,7 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [user, loading, navigate]);
 
@@ -87,7 +87,7 @@ const Auth = () => {
           }
         } else {
           toast.success("Account created successfully! Welcome to SaathiCircle.");
-          navigate("/");
+          navigate("/dashboard");
         }
       } else {
         const { error } = await signIn(email, password);
@@ -100,7 +100,7 @@ const Auth = () => {
           }
         } else {
           toast.success("Welcome back!");
-          navigate("/");
+          navigate("/dashboard");
         }
       }
     } finally {
