@@ -10,9 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   Settings, IndianRupee, Globe2, Tag, Save, Loader2, 
-  CheckCircle2, XCircle, Plus, X 
+  CheckCircle2, XCircle
 } from "lucide-react";
-
+import AvailabilityManagement from "./AvailabilityManagement";
 interface SaathiDetails {
   id: string;
   user_id: string;
@@ -171,6 +171,9 @@ const SaathiSettings = ({ userId }: SaathiSettingsProps) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Availability Schedule */}
+      <AvailabilityManagement saathiId={details.id} />
 
       {/* Availability & Pricing */}
       <Card>
