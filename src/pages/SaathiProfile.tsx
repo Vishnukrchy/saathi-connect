@@ -8,6 +8,7 @@ import {
   Heart, Share2, ChevronLeft, Check, Languages
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import BookingModal from "@/components/booking/BookingModal";
 
 // Mock data - in real app this would come from API
 const saathiData = {
@@ -59,8 +60,7 @@ const saathiData = {
 
 const SaathiProfile = () => {
   const { id } = useParams();
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   // In real app, fetch saathi data based on id
   const saathi = saathiData;
@@ -172,7 +172,7 @@ const SaathiProfile = () => {
                         Secure payment • Cancel anytime
                       </p>
                     </div>
-                    <Button variant="hero" size="xl">
+                    <Button variant="hero" size="xl" onClick={() => setIsBookingModalOpen(true)}>
                       <Calendar className="w-5 h-5" />
                       Book Now
                     </Button>
@@ -269,7 +269,7 @@ const SaathiProfile = () => {
                       ))}
                     </div>
 
-                    <Button variant="hero" className="w-full mt-6">
+                    <Button variant="hero" className="w-full mt-6" onClick={() => setIsBookingModalOpen(true)}>
                       <Calendar className="w-5 h-5" />
                       Book a Slot
                     </Button>
@@ -307,6 +307,17 @@ const SaathiProfile = () => {
         </main>
 
         <Footer />
+
+        {/* Booking Modal */}
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+          saathiId={String(saathi.id)}
+          saathiName={saathi.name}
+          saathiImage={saathi.image}
+          hourlyRate={saathi.rate}
+          availability={saathi.availability}
+        />
       </div>
     </>
   );
