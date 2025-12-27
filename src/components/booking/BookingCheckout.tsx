@@ -103,7 +103,7 @@ const BookingCheckout = ({
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Create booking in database
-      const { error } = await supabase.from("bookings").insert({
+      const { data: bookingData, error } = await supabase.from("bookings").insert({
         saathi_id: saathiId,
         seeker_id: user.id,
         booking_date: format(date, "yyyy-MM-dd"),
@@ -116,9 +116,39 @@ const BookingCheckout = ({
         status: "confirmed",
         payment_status: "paid",
         stripe_payment_intent_id: `mock_pi_${Date.now()}`, // Mock payment intent
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Get saathi's user_id to send notification
+      const { data: saathiData } = await supabase
+        .from("saathi_details")
+        .select("user_id")
+        .eq("id", saathiId)
+        .single();
+
+      // Create notifications for both seeker and saathi
+      const notifications = [
+        {
+          user_id: user.id,
+          title: "Booking Confirmed!",
+          message: `Your session with ${saathiName} is confirmed for ${format(date, "MMMM d, yyyy")} at ${slot}`,
+          type: "booking_confirmed",
+          related_booking_id: bookingData.id,
+        },
+      ];
+
+      if (saathiData?.user_id) {
+        notifications.push({
+          user_id: saathiData.user_id,
+          title: "New Booking!",
+          message: `You have a new booking for ${format(date, "MMMM d, yyyy")} at ${slot}. Location: ${meetingLocation}`,
+          type: "new_booking",
+          related_booking_id: bookingData.id,
+        });
+      }
+
+      await supabase.from("notifications").insert(notifications);
 
       toast({
         title: "Booking Confirmed! 🎉",
