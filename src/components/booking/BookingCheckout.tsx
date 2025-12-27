@@ -81,6 +81,17 @@ const BookingCheckout = ({
       return;
     }
 
+    // Validate saathiId is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(saathiId)) {
+      toast({
+        title: "Invalid Saathi",
+        description: "This is a demo profile. Please book with a real Saathi.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
