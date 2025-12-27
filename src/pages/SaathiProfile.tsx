@@ -1,18 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   MapPin, Star, Clock, Shield, MessageCircle, Calendar,
-  Heart, Share2, ChevronLeft, Check, Languages
+  Heart, Share2, ChevronLeft, Check, Languages, Loader2
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import BookingModal from "@/components/booking/BookingModal";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data - in real app this would come from API
-const saathiData = {
-  id: 1,
+interface SaathiData {
+  id: string;
+  name: string;
+  location: string;
+  rating: number;
+  reviewCount: number;
+  topics: string[];
+  rate: number;
+  bio: string;
+  image: string;
+  verified: boolean;
+  memberSince: string;
+  languages: string[];
+  availability: Record<string, string[]>;
+  reviews: {
+    id: number;
+    name: string;
+    rating: number;
+    date: string;
+    content: string;
+  }[];
+}
+
+// Fallback mock data for when no real data exists
+const mockSaathiData: SaathiData = {
+  id: "mock-id",
   name: "Priya Sharma",
   location: "Mumbai, Maharashtra",
   rating: 4.9,
@@ -58,12 +82,132 @@ const saathiData = {
   ],
 };
 
+const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
 const SaathiProfile = () => {
   const { id } = useParams();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [saathi, setSaathi] = useState<SaathiData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // In real app, fetch saathi data based on id
-  const saathi = saathiData;
+  useEffect(() => {
+    const fetchSaathiData = async () => {
+      if (!id) {
+        setSaathi(mockSaathiData);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Check if id is a valid UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        
+        if (!uuidRegex.test(id)) {
+          // Not a valid UUID, use mock data
+          setSaathi(mockSaathiData);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch saathi details
+        const { data: saathiDetails, error } = await supabase
+          .from("saathi_details")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (error || !saathiDetails) {
+          console.error("Error fetching saathi:", error);
+          setSaathi(mockSaathiData);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch profile info
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", saathiDetails.user_id)
+          .single();
+
+        // Fetch availability slots
+        const { data: slots } = await supabase
+          .from("availability_slots")
+          .select("*")
+          .eq("saathi_id", id);
+
+        // Convert slots to availability format
+        const availability: Record<string, string[]> = {
+          sunday: [],
+          monday: [],
+          tuesday: [],
+          wednesday: [],
+          thursday: [],
+          friday: [],
+          saturday: [],
+        };
+
+        if (slots) {
+          slots.forEach((slot) => {
+            const dayName = dayNames[slot.day_of_week];
+            const startTime = formatTime(slot.start_time);
+            const endTime = formatTime(slot.end_time);
+            availability[dayName].push(`${startTime} - ${endTime}`);
+          });
+        }
+
+        const saathiData: SaathiData = {
+          id: saathiDetails.id,
+          name: profile?.full_name || "Saathi",
+          location: profile?.city || "India",
+          rating: 4.8, // Would come from reviews aggregate
+          reviewCount: 0,
+          topics: saathiDetails.topics || [],
+          rate: saathiDetails.hourly_rate,
+          bio: saathiDetails.bio || profile?.bio || "No bio available",
+          image: profile?.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=800&fit=crop&crop=face",
+          verified: saathiDetails.is_verified || false,
+          memberSince: new Date(saathiDetails.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+          languages: saathiDetails.languages || ["Hindi", "English"],
+          availability,
+          reviews: [], // Would come from reviews table
+        };
+
+        setSaathi(saathiData);
+      } catch (err) {
+        console.error("Error:", err);
+        setSaathi(mockSaathiData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSaathiData();
+  }, [id]);
+
+  const formatTime = (time: string): string => {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!saathi) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Saathi not found</p>
+      </div>
+    );
+  }
 
   return (
     <>
