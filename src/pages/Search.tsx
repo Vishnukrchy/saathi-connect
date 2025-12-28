@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { 
   Search as SearchIcon, MapPin, Star, Filter, Grid, List,
-  ChevronDown, X, Clock, Heart
+  ChevronDown, X, Clock, Heart, Loader2
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import {
@@ -16,103 +16,116 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
+import { AVAILABLE_CITIES } from "@/components/dashboard/ProfileManagement";
 
-const saathis = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    location: "Mumbai, Maharashtra",
-    distance: "2.5 km",
-    rating: 4.9,
-    reviews: 127,
-    topics: ["Life Talks", "Career"],
-    rate: 299,
-    bio: "Former HR manager who loves chai and meaningful conversations about life & career. Available for morning walks and evening chai sessions.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face",
-    available: true,
-    languages: ["Hindi", "English"],
-  },
-  {
-    id: 2,
-    name: "Rajesh Kumar",
-    location: "Delhi, NCR",
-    distance: "3.2 km",
-    rating: 4.8,
-    reviews: 89,
-    topics: ["Travel Stories", "Hobbies"],
-    rate: 349,
-    bio: "Retired teacher with 30 years of stories. Love evening walks and sharing travel tales. Great listener who enjoys deep conversations.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-    available: true,
-    languages: ["Hindi", "English", "Punjabi"],
-  },
-  {
-    id: 3,
-    name: "Ananya Patel",
-    location: "Bangalore, Karnataka",
-    distance: "1.8 km",
-    rating: 4.9,
-    reviews: 156,
-    topics: ["Family", "Life Talks"],
-    rate: 399,
-    bio: "Life coach and mother of two. Here to listen without judgment. Specializing in family matters and life transitions.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
-    available: false,
-    languages: ["English", "Kannada", "Hindi"],
-  },
-  {
-    id: 4,
-    name: "Vikram Singh",
-    location: "Jaipur, Rajasthan",
-    distance: "5.1 km",
-    rating: 4.7,
-    reviews: 64,
-    topics: ["Career", "Hobbies"],
-    rate: 249,
-    bio: "Entrepreneur and chai enthusiast. Love discussing startups, business ideas, and life lessons over a cup of masala chai.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-    available: true,
-    languages: ["Hindi", "English", "Marwari"],
-  },
-  {
-    id: 5,
-    name: "Sunita Devi",
-    location: "Kolkata, West Bengal",
-    distance: "4.3 km",
-    rating: 4.8,
-    reviews: 92,
-    topics: ["Family", "Life Talks"],
-    rate: 279,
-    bio: "Retired school principal with decades of wisdom. Love sharing stories and listening to your life experiences over adda sessions.",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face",
-    available: true,
-    languages: ["Bengali", "Hindi", "English"],
-  },
-  {
-    id: 6,
-    name: "Mohammed Ali",
-    location: "Hyderabad, Telangana",
-    distance: "2.9 km",
-    rating: 4.6,
-    reviews: 45,
-    topics: ["Travel Stories", "Career"],
-    rate: 299,
-    bio: "World traveler who has visited 30+ countries. Love sharing travel stories and giving career advice to young professionals.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face",
-    available: true,
-    languages: ["Telugu", "Urdu", "Hindi", "English"],
-  },
-];
+interface SaathiResult {
+  id: string;
+  name: string;
+  location: string;
+  rating: number;
+  reviews: number;
+  topics: string[];
+  rate: number;
+  bio: string;
+  image: string;
+  available: boolean;
+  languages: string[];
+}
 
-const topics = ["All Topics", "Life Talks", "Career", "Family", "Travel Stories", "Hobbies"];
-const cities = ["All Cities", "Mumbai", "Delhi", "Bangalore", "Jaipur", "Kolkata", "Hyderabad"];
+const topics = ["All Topics", "Life Advice", "Career Guidance", "Relationship Talk", "Mental Wellness", "Elder Care", "Tech Help", "Travel Stories", "Cooking & Recipes", "Spirituality", "General Conversations"];
+const cities = ["All Cities", ...AVAILABLE_CITIES];
 
 const Search = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedTopic, setSelectedTopic] = useState("All Topics");
   const [selectedCity, setSelectedCity] = useState("All Cities");
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [saathis, setSaathis] = useState<SaathiResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const fetchSaathis = async () => {
+      setLoading(true);
+      try {
+        // Fetch verified saathis with their profile info
+        const { data: saathiDetails, error } = await supabase
+          .from("saathi_details")
+          .select("*")
+          .eq("is_verified", true)
+          .eq("is_available", true);
+
+        if (error) {
+          console.error("Error fetching saathis:", error);
+          return;
+        }
+
+        if (!saathiDetails || saathiDetails.length === 0) {
+          setSaathis([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch profiles for all saathis
+        const userIds = saathiDetails.map(s => s.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("user_id", userIds);
+
+        // Combine data
+        const results: SaathiResult[] = saathiDetails.map(saathi => {
+          const profile = profiles?.find(p => p.user_id === saathi.user_id);
+          return {
+            id: saathi.id,
+            name: profile?.full_name || "Saathi",
+            location: profile?.city || "India",
+            rating: 4.8,
+            reviews: 0,
+            topics: saathi.topics || [],
+            rate: saathi.hourly_rate,
+            bio: saathi.bio || profile?.bio || "Friendly companion ready for meaningful conversations.",
+            image: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${saathi.id}`,
+            available: saathi.is_available || true,
+            languages: saathi.languages || ["Hindi", "English"],
+          };
+        });
+
+        setSaathis(results);
+      } catch (err) {
+        console.error("Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSaathis();
+  }, []);
+
+  // Filter saathis based on selected filters
+  const filteredSaathis = saathis.filter(saathi => {
+    // City filter
+    if (selectedCity !== "All Cities" && !saathi.location.includes(selectedCity)) {
+      return false;
+    }
+    // Topic filter
+    if (selectedTopic !== "All Topics" && !saathi.topics.some(t => t.toLowerCase().includes(selectedTopic.toLowerCase()))) {
+      return false;
+    }
+    // Price filter
+    if (saathi.rate < priceRange[0] || saathi.rate > priceRange[1]) {
+      return false;
+    }
+    // Search query
+    if (searchQuery && !saathi.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+        !saathi.location.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !saathi.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -138,6 +151,8 @@ const Search = () => {
                   <input
                     type="text"
                     placeholder="Search by name, location, or topic..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full h-12 pl-12 pr-4 rounded-xl bg-muted border-0 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:outline-none transition-all"
                   />
                 </div>
@@ -262,7 +277,9 @@ const Search = () => {
               {/* Results Header */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground">{saathis.length}</span> Saathis
+                  {loading ? "Loading..." : (
+                    <>Showing <span className="font-semibold text-foreground">{filteredSaathis.length}</span> Saathis</>
+                  )}
                 </p>
                 <Select defaultValue="relevance">
                   <SelectTrigger className="w-44 h-10 rounded-lg bg-card border-border">
@@ -279,8 +296,18 @@ const Search = () => {
               </div>
 
               {/* Grid */}
+              {loading ? (
+                <div className="col-span-full flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : filteredSaathis.length === 0 ? (
+                <div className="col-span-full text-center py-20">
+                  <p className="text-muted-foreground text-lg mb-2">No Saathis found</p>
+                  <p className="text-sm text-muted-foreground">Try adjusting your filters or check back later</p>
+                </div>
+              ) : (
               <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-                {saathis.map((saathi, index) => (
+                {filteredSaathis.map((saathi, index) => (
                   <div
                     key={saathi.id}
                     className={`bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all duration-300 animate-fade-in ${
@@ -318,7 +345,6 @@ const Search = () => {
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">
                             <MapPin className="w-4 h-4" />
                             {saathi.location}
-                            <span className="text-primary font-medium">• {saathi.distance}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 bg-accent/10 px-2 py-1 rounded-full">
@@ -368,6 +394,7 @@ const Search = () => {
                   </div>
                 ))}
               </div>
+              )}
 
               {/* Load More */}
               <div className="text-center mt-12">

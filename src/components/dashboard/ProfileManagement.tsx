@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User, Phone, MapPin, FileText, Save, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Available cities for Saathis - must match Search page
+export const AVAILABLE_CITIES = ["Mumbai", "Delhi", "Bangalore", "Jaipur", "Kolkata", "Hyderabad", "Chennai", "Pune", "Ahmedabad", "Lucknow"];
 
 interface Profile {
   id: string;
@@ -163,12 +173,21 @@ const ProfileManagement = ({ userId }: ProfileManagementProps) => {
               <MapPin className="w-4 h-4 text-muted-foreground" />
               City
             </Label>
-            <Input
-              id="city"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g., Mumbai, Delhi, Bangalore"
-            />
+            <Select value={city} onValueChange={setCity}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select your city" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_CITIES.map((cityOption) => (
+                  <SelectItem key={cityOption} value={cityOption}>
+                    {cityOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Select a city where you're available to meet seekers
+            </p>
           </div>
 
           <div className="space-y-2 sm:col-span-2">
