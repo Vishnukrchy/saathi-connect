@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User, Phone, MapPin, FileText, Save, Loader2 } from "lucide-react";
+import AvatarUpload from "./AvatarUpload";
 import {
   Select,
   SelectContent,
@@ -42,6 +42,7 @@ const ProfileManagement = ({ userId }: ProfileManagementProps) => {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -62,6 +63,7 @@ const ProfileManagement = ({ userId }: ProfileManagementProps) => {
         setPhone(data.phone || "");
         setCity(data.city || "");
         setBio(data.bio || "");
+        setAvatarUrl(data.avatar_url);
       }
 
       setLoading(false);
@@ -124,15 +126,15 @@ const ProfileManagement = ({ userId }: ProfileManagementProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Avatar Section */}
-        <div className="flex items-center gap-4">
-          <Avatar className="w-20 h-20">
-            <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-              {fullName?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div>
+        {/* Avatar Upload Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <AvatarUpload
+            userId={userId}
+            currentAvatarUrl={avatarUrl}
+            fullName={fullName}
+            onUploadComplete={(url) => setAvatarUrl(url || null)}
+          />
+          <div className="sm:ml-2">
             <p className="font-medium text-foreground">{fullName || "Your Name"}</p>
             <p className="text-sm text-muted-foreground">
               {city ? city : "Add your city"}
