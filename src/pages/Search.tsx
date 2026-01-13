@@ -50,11 +50,10 @@ const Search = () => {
     const fetchSaathis = async () => {
       setLoading(true);
       try {
-        // Fetch verified saathis with their profile info
+        // Fetch all available saathis with their profile info
         const { data: saathiDetails, error } = await supabase
           .from("saathi_details")
           .select("*")
-          .eq("is_verified", true)
           .eq("is_available", true);
 
         if (error) {
@@ -106,23 +105,37 @@ const Search = () => {
 
   // Filter saathis based on selected filters
   const filteredSaathis = saathis.filter(saathi => {
-    // City filter
-    if (selectedCity !== "All Cities" && !saathi.location.includes(selectedCity)) {
-      return false;
+    // City filter - case insensitive match
+    if (selectedCity !== "All Cities") {
+      const saathiCity = saathi.location.toLowerCase().trim();
+      const filterCity = selectedCity.toLowerCase().trim();
+      if (saathiCity !== filterCity && !saathiCity.includes(filterCity)) {
+        return false;
+      }
     }
-    // Topic filter
-    if (selectedTopic !== "All Topics" && !saathi.topics.some(t => t.toLowerCase().includes(selectedTopic.toLowerCase()))) {
-      return false;
+    // Topic filter - case insensitive
+    if (selectedTopic !== "All Topics") {
+      const hasMatchingTopic = saathi.topics.some(t => 
+        t.toLowerCase().trim() === selectedTopic.toLowerCase().trim() ||
+        t.toLowerCase().includes(selectedTopic.toLowerCase())
+      );
+      if (!hasMatchingTopic) {
+        return false;
+      }
     }
     // Price filter
     if (saathi.rate < priceRange[0] || saathi.rate > priceRange[1]) {
       return false;
     }
-    // Search query
-    if (searchQuery && !saathi.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !saathi.location.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !saathi.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))) {
-      return false;
+    // Search query - case insensitive
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase().trim();
+      const matchesName = saathi.name.toLowerCase().includes(query);
+      const matchesLocation = saathi.location.toLowerCase().includes(query);
+      const matchesTopic = saathi.topics.some(t => t.toLowerCase().includes(query));
+      if (!matchesName && !matchesLocation && !matchesTopic) {
+        return false;
+      }
     }
     return true;
   });
