@@ -12,6 +12,7 @@ import SaathiProfile from "./pages/SaathiProfile";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import BecomeSaathi from "./pages/BecomeSaathi";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/become-saathi" element={<BecomeSaathi />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
