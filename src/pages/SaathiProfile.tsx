@@ -114,11 +114,18 @@ const SaathiProfile = () => {
           .from("saathi_details")
           .select("*")
           .eq("id", id)
-          .single();
+          .maybeSingle();
 
-        if (error || !saathiDetails) {
+        if (error) {
           console.error("Error fetching saathi:", error);
-          setSaathi(mockSaathiData);
+          setSaathi(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!saathiDetails) {
+          console.error("Saathi not found with id:", id);
+          setSaathi(null);
           setIsLoading(false);
           return;
         }
@@ -203,8 +210,18 @@ const SaathiProfile = () => {
 
   if (!saathi) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Saathi not found</p>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-2">Saathi Not Found</h2>
+            <p className="text-muted-foreground mb-4">The profile you're looking for doesn't exist or is unavailable.</p>
+            <Button asChild>
+              <Link to="/search">Browse Saathis</Link>
+            </Button>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
