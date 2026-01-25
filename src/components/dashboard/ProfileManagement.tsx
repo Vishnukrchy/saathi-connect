@@ -45,7 +45,7 @@ const ProfileManagement = ({ userId }: ProfileManagementProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchOrCreateProfile = async () => {
       setLoading(true);
       
       const { data, error } = await supabase
@@ -57,19 +57,38 @@ const ProfileManagement = ({ userId }: ProfileManagementProps) => {
       if (error) {
         console.error("Error fetching profile:", error);
         toast.error("Failed to load profile");
-      } else if (data) {
+        setLoading(false);
+        return;
+      }
+      
+      if (data) {
         setProfile(data);
         setFullName(data.full_name || "");
         setPhone(data.phone || "");
         setCity(data.city || "");
         setBio(data.bio || "");
         setAvatarUrl(data.avatar_url);
+      } else {
+        // Profile doesn't exist, create one
+        const { data: newProfile, error: insertError } = await supabase
+          .from("profiles")
+          .insert({ user_id: userId })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          toast.error("Failed to create profile");
+        } else if (newProfile) {
+          setProfile(newProfile);
+          toast.success("Profile created! Please fill in your details.");
+        }
       }
 
       setLoading(false);
     };
 
-    fetchProfile();
+    fetchOrCreateProfile();
   }, [userId]);
 
   const handleSave = async () => {
